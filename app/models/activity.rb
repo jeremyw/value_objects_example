@@ -1,6 +1,4 @@
 class Activity < ActiveRecord::Base
-  MINUTES_PER_DAY = 1440
-
   attr_accessible :description,
     :start_hour, :start_minute,
     :end_hour, :end_minute
@@ -8,24 +6,27 @@ class Activity < ActiveRecord::Base
   validates :start_hour, :end_hour, presence: true
   validates :description, length: { in: 1..140 }
 
-  def start_time_of_day
-    start_hour * 60 + start_minute
+  def timespan
+    Timespan.new(
+      time_of_day(start_hour, start_minute),
+      time_of_day(end_hour, end_minute))
   end
+  delegate :duration, to: :timespan
 
-  def end_time_of_day
-    end_hour * 60 + end_minute
-  end
-
-  def duration_in_minutes
-    end_time_of_day - start_time_of_day
-  end
-
-  def duration_in_hours
-    duration_in_minutes / 60.0
+  def timespan=(timespan)
+    self[:start_hour]   = timespan.start_time_of_day.hour
+    self[:start_minute] = timespan.start_time_of_day.minute
+    self[:end_hour]     = timespan.end_time_of_day.hour
+    self[:end_minute]   = timespan.end_time_of_day.minute
   end
 
   def overlaps?(other)
-    range = (self.start_time_of_day...self.end_time_of_day)
-    range.cover?(other.start_time_of_day) || range.cover?(other.end_time_of_day)
+    timespan.overlaps?(other.timespan)
+  end
+
+  private
+
+  def time_of_day(hour, minute)
+    TimeOfDay.new(hour, minute)
   end
 end
