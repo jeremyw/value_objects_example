@@ -16,6 +16,12 @@ group :assets do
   gem 'uglifier', '>= 1.0.3'
 end
 
+group :development do
+  gem 'guard-rspec'
+  gem 'rb-fsevent'
+end
+
 group :test, :development do
   gem "rspec-rails", "~> 2.0"
+  gem "guard"
 end
